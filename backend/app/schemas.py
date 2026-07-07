@@ -167,3 +167,11 @@ class DashboardStats(BaseModel):
     total_stations: int
     quality_pass_rate: float
     critical_materials_low_stock: int
+
+
+class AskOrderInput(BaseModel):
+    question: str
+
+
+class AskOrderOutput(BaseModel):
+    answer: str

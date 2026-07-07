@@ -205,3 +205,7 @@ def create_quality_record(data: QualityRecordCreate, db: Session = Depends(get_d
         .filter(QualityRecord.id == record.id)
         .first()
     )
+
+
+# 注册 Agent 路由（必须在 app 创建之后 import）
+from .agent import router as agent_router  # noqa: E402, F401
