@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>原生 JS Demo — 对照 Vue 理解原理</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0f1419;
+      color: #e8eaed;
+      padding: 24px;
+      line-height: 1.6;
+    }
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    .subtitle { color: #8b95a5; font-size: 14px; margin-bottom: 24px; }
+    .banner {
+      background: #1e3a5f;
+      border: 1px solid #2a3544;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    .banner strong { color: #60a5fa; }
+    .stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 140px;
+      background: #1a2332;
+      border: 1px solid #2a3544;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .stat-card .label { font-size: 13px; color: #8b95a5; }
+    .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+    .panel {
+      background: #1a2332;
+      border: 1px solid #2a3544;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #2a3544;
+      font-weight: 600;
+    }
+    .loading {
+      padding: 40px;
+      text-align: center;
+      color: #8b95a5;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #2a3544;
+      font-size: 14px;
+    }
+    th { background: #141b26; color: #8b95a5; font-weight: 500; }
+    tr:hover td { background: #243044; }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .tag-pending { background: #374151; color: #d1d5db; }
+    .tag-released { background: #1e3a5f; color: #60a5fa; }
+    .tag-in_progress { background: #422006; color: #fbbf24; }
+    .tag-completed { background: #14532d; color: #4ade80; }
+    .progress-bar {
+      height: 6px;
+      background: #2a3544;
+      border-radius: 3px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #e60012;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    button {
+      background: transparent;
+      border: none;
+      color: #60a5fa;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px 8px;
+    }
+    button:hover { text-decoration: underline; }
+    button:disabled { color: #555; cursor: not-allowed; text-decoration: none; }
+    .code-note {
+      background: #0d1117;
+      border-left: 3px solid #e60012;
+      padding: 12px 16px;
+      margin: 16px 0;
+      font-size: 13px;
+      color: #8b95a5;
+    }
+    .code-note code { color: #fbbf24; }
+    .compare { color: #4ade80; font-size: 12px; margin-top: 4px; }
+    .error { color: #f87171; padding: 16px; }
+  </style>
+</head>
+<body>
+  <h1>原生 JS Demo — 工单列表</h1>
+  <p class="subtitle">
+    同一套后端 API，不用 Vue，纯手工 DOM 操作。打开 DevTools → Sources 对照注释阅读。
+  </p>
+
+  <div class="banner">
+    <strong>学习目的：</strong>理解 Vue 帮你「省略」了什么。
+    本页等价于简化版 <code>Dashboard.vue</code> + <code>WorkOrders.vue</code> 的表格部分。
+    Vue 版地址：<a href="/" style="color:#60a5fa">http://localhost:5173</a>
+  </div>
+
+  <!-- 统计卡片：Vue 里用 ref + computed + v-for 渲染 -->
+  <div class="stats" id="stats">
+    <div class="stat-card">
+      <div class="label">工单总数</div>
+      <div class="value" id="stat-total">-</div>
+      <div class="compare">← Vue: stats.value.total_orders</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">生产中</div>
+      <div class="value" id="stat-active">-</div>
+      <div class="compare">← Vue: computed 过滤 status</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">已完工</div>
+      <div class="value" id="stat-done">-</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">工单列表</div>
+    <!-- loading 遮罩：Vue 里一个 v-loading="loading" 搞定 -->
+    <div id="loading" class="loading">加载中...</div>
+    <table id="order-table" style="display:none">
+      <thead>
+        <tr>
+          <th>工单号</th>
+          <th>产品</th>
+          <th>客户</th>
+          <th>状态</th>
+          <th>进度</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="order-tbody"></tbody>
+    </table>
+    <div id="error" class="error" style="display:none"></div>
+  </div>
+
+  <div class="code-note">
+    <strong>对照 Vue：</strong>
+    下面 script 里的每一步，在 Vue 项目里都有对应写法。
+    <code>let orders = []</code> → <code>const orders = ref([])</code>；
+    <code>renderTable()</code> → Vue 自动 Diff/Patch；
+    <code>loadOrders()</code> → <code>onMounted(async () => ...)</code>
+  </div>
+
+  <script>
+    // ============================================================
+    // 第 1 部分：数据（Vue 里用 ref / reactive）
+    // ============================================================
+
+    /** 普通 JS 变量 — 改了不会自动更新界面，必须手动调 render */
+    let orders = []
+    let loading = true
+
+    const STATUS_LABELS = {
+      pending: '待下达',
+      released: '已下达',
+      in_progress: '生产中',
+      completed: '已完工',
+    }
+
+    // ============================================================
+    // 第 2 部分：工具函数（Vue 里用 computed）
+    // ============================================================
+
+    function calcProgress(order) {
+      const tasks = order.station_tasks || []
+      if (!tasks.length) return 0
+      const done = tasks.filter(t => t.status === 'completed').length
+      return Math.round((done / tasks.length) * 100)
+    }
+
+    function calcStats(list) {
+      return {
+        total: list.length,
+        active: list.filter(o => ['released', 'in_progress'].includes(o.status)).length,
+        done: list.filter(o => o.status === 'completed').length,
+      }
+    }
+
+    // ============================================================
+    // 第 3 部分：DOM 操作 — 手动渲染（Vue 帮你省略的核心）
+    // ============================================================
+
+    /** 更新统计卡片 — 每个元素都要自己找、自己改 */
+    function renderStats(list) {
+      const s = calcStats(list)
+      document.getElementById('stat-total').textContent = s.total
+      document.getElementById('stat-active').textContent = s.active
+      document.getElementById('stat-done').textContent = s.done
+    }
+
+    /** 渲染表格 — 等价于 Vue 的 v-for + el-table */
+    function renderTable(list) {
+      const tbody = document.getElementById('order-tbody')
+      tbody.innerHTML = ''  // 清空旧行（Vue Diff 帮你决定删哪些）
+
+      list.forEach(order => {
+        const tr = document.createElement('tr')
+        const progress = calcProgress(order)
+        const statusLabel = STATUS_LABELS[order.status] || order.status
+
+        tr.innerHTML = `
+          <td>${escapeHtml(order.order_no)}</td>
+          <td>
+            <div>${escapeHtml(order.product.name)}</div>
+            <div style="font-size:12px;color:#8b95a5">${escapeHtml(order.product.code)}</div>
+          </td>
+          <td>${escapeHtml(order.customer || '-')}</td>
+          <td><span class="tag tag-${order.status}">${statusLabel}</span></td>
+          <td>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:${progress}%"></div>
+            </div>
+            <div style="font-size:11px;color:#8b95a5;margin-top:2px">${progress}%</div>
+          </td>
+          <td>
+            ${order.status === 'pending'
+              ? `<button data-action="release" data-id="${order.id}">下达</button>`
+              : `<button data-action="refresh">已下达</button>`}
+          </td>
+        `
+        tbody.appendChild(tr)
+      })
+
+      // 事件绑定：Vue 里写 @click="handleRelease(row)" 即可
+      tbody.querySelectorAll('[data-action="release"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id
+          handleRelease(id)
+        })
+      })
+    }
+
+    /** 切换 loading 状态 — Vue 里: v-loading="loading" */
+    function setLoading(isLoading) {
+      loading = isLoading
+      document.getElementById('loading').style.display = isLoading ? 'block' : 'none'
+      document.getElementById('order-table').style.display = isLoading ? 'none' : 'table'
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error')
+      el.textContent = msg
+      el.style.display = 'block'
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div')
+      div.textContent = str
+      return div.innerHTML
+    }
+
+    // ============================================================
+    // 第 4 部分：API 请求（和 Vue 项目 api.js 完全一样）
+    // ============================================================
+
+    async function fetchOrders() {
+      const res = await fetch('/api/work-orders')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json()
+    }
+
+    async function releaseOrder(id) {
+      const res = await fetch(`/api/work-orders/${id}/release`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.detail || '下达失败')
+      }
+      return res.json()
+    }
+
+    // ============================================================
+    // 第 5 部分：业务流程（Vue 里在 onMounted + 事件处理函数里）
+    // ============================================================
+
+    async function loadOrders() {
+      setLoading(true)
+      document.getElementById('error').style.display = 'none'
+      try {
+        orders = await fetchOrders()       // ① 拿数据
+        renderStats(orders)                // ② 手动更新统计（Vue 自动）
+        renderTable(orders)                // ③ 手动更新表格（Vue 自动）
+      } catch (e) {
+        showError('加载失败：' + e.message + '（请确认后端在 localhost:8000 运行）')
+      } finally {
+        setLoading(false)                  // ④ 关 loading
+      }
+    }
+
+    async function handleRelease(id) {
+      if (!confirm('确认下达此工单到车间？')) return
+      try {
+        await releaseOrder(id)
+        alert('工单已下达')
+        await loadOrders()   // 重新加载 + 重新 render 整个表格
+      } catch (e) {
+        alert(e.message)
+      }
+    }
+
+    // ============================================================
+    // 第 6 部分：启动 — 等价于 Vue 的 onMounted
+    // ============================================================
+
+    // DOM 就绪后执行（类似 onMounted）
+    loadOrders()
+
+    // ============================================================
+    // 思考题（对照 docs/frontend-guide.md 第 0 章）
+    // ============================================================
+    //
+    // 1. 如果把 orders = await fetchOrders() 之后不调 renderTable，
+    //    界面会变吗？→ 不会。说明原生 JS 没有「响应式」。
+    //
+    // 2. Vue 的 ref 做了什么额外的事？
+    //    → orders.value = 新数据 后，自动触发 render，不用手写 renderTable。
+    //
+    // 3. 为什么 release 后要 loadOrders() 而不是只改一行？
+    //    → 原生 JS 没有 Diff，最简单是整表重绘。Vue 可以只 Patch 变化的那一行。
+    //
+    // 4. 打开 Vue 版工单页，对比操作「下达」按钮，体验有何不同？
+    //    → 交互一样，但 Vue 版用 ElMessage 提示、不用 alert/confirm。
+  </script>
+</body>
+</html>

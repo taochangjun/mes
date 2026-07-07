@@ -69,6 +69,8 @@ npm run dev
 
 访问 http://localhost:5173
 
+**新人学习：** 先看原生 JS 对照 Demo → http://localhost:5173/native-demo.html（详见 `docs/frontend-guide.md` 第 0.11 节）
+
 ## 技术栈
 
 - **后端**: Python 3.11+ / FastAPI / SQLAlchemy / SQLite
