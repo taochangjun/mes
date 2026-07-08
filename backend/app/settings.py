@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     deepseek_models: str = ""  # 新增，注意类型，看起来是列表
 
     # 指定要加载的 .env 文件
-    model_config = SettingsConfigDict(env_file=Path("config/.env"),
+    _BACKEND_DIR = Path(__file__).resolve().parent.parent
+    model_config = SettingsConfigDict(env_file=_BACKEND_DIR/"config"/".env",
                                       env_file_encoding="utf-8")
 
 

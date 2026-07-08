@@ -1,7 +1,8 @@
 from functools import lru_cache
 
-from settings import get_settings
 from openai import OpenAI
+
+from ..settings import get_settings
 
 
 @lru_cache()

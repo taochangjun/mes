@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..models import StationTask, StationTaskStatus, WorkOrder
 from ..schemas import AskOrderOutput
-from ..services import get_order_by_no
-from settings import get_settings
+from ..settings import get_settings
 
 from .llm import complete
 from .prompts import build_messages
@@ -99,6 +98,7 @@ def build_orders_summary(db: Session) -> dict:
 def llm_explain(question: str, context: dict, *, thinking: bool = False) -> str:
     messages = build_messages(question, context)
     settings = get_settings()
+    print(settings)
     return complete(messages, model=settings.deepseek_model_pro, thinking=thinking)
 
 
