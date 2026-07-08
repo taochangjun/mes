@@ -175,3 +175,5 @@ class AskOrderInput(BaseModel):
 
 class AskOrderOutput(BaseModel):
     answer: str
+    order_no: str | None = None
+    matched: bool = True      # 是否找到工单

@@ -48,7 +48,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
@@ -208,4 +207,7 @@ def create_quality_record(data: QualityRecordCreate, db: Session = Depends(get_d
 
 
 # 注册 Agent 路由（必须在 app 创建之后 import）
-from .agent import router as agent_router  # noqa: E402, F401
+# from .agent import router as agent_router  # noqa: E402, F401
+
+from .agent.router import router as agent_router
+app.include_router(agent_router)

@@ -1,3 +1,4 @@
+import json
 
 DEFAULT_MES_SYSTEM_PROMPT = """
 你是三一重工 SanyMES 制造执行系统的技术顾问。
@@ -49,3 +50,19 @@ OrderList: [{
 输出： xxxx工单不存在
 
 """
+
+# 上面的两个prompt是第一版自己写的 prompt , 写的很挫😄, 下面的是按照AI 建议改的
+
+MES_ADVISOR = """你是SanyMES技术顾问。根据【上下文】回答用户问题。
+规则：
+- 只根据上下文回答，不要编造
+- 上下文没有的工单，明确说【不存在】
+- 用简洁中文，必要时分点
+"""
+
+
+def build_messages(question: str, context: dict) -> list[dict]:
+    return [
+        {"role": "system", "content": MES_ADVISOR},
+        {"role": "user", "content": f"【上下文】\n{json.dumps(context, ensure_ascii=False)} \n\n 【问题】\n {question}"},
+    ]

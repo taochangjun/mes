@@ -224,3 +224,10 @@ def _get_order(db: Session, order_id: int) -> WorkOrder:
     if not order:
         raise ValueError("工单不存在")
     return order
+
+
+def get_order_by_no(db: Session, order_no: str):
+    order = db.query(WorkOrder).filter(WorkOrder.order_no == order_no).first()
+    if not order:
+        raise ValueError("工单不存在")
+    return order
