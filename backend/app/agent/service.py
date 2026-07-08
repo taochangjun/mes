@@ -98,7 +98,6 @@ def build_orders_summary(db: Session) -> dict:
 def llm_explain(question: str, context: dict, *, thinking: bool = False) -> str:
     messages = build_messages(question, context)
     settings = get_settings()
-    print(settings)
     return complete(messages, model=settings.deepseek_model_pro, thinking=thinking)
 
 

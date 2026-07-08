@@ -177,3 +177,9 @@ class AskOrderOutput(BaseModel):
     answer: str
     order_no: str | None = None
     matched: bool = True      # 是否找到工单
+    tool_calls: list[dict] = []
+
+
+class AgentChatOutput(BaseModel):
+    answer: str
+    tool_calls: list[dict] = []
