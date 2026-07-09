@@ -20,6 +20,9 @@ export const getQualityRecords = (workOrderId) =>
   api.get('/quality-records', { params: { work_order_id: workOrderId } }).then(r => r.data)
 export const createQualityRecord = (data) => api.post('/quality-records', data).then(r => r.data)
 
+/** Agent 阶段 2：Tool Calling 对话 */
+export const agentChat = (question) => api.post('/agent/chat', { question }).then((r) => r.data)
+
 export const STATUS_LABELS = {
   pending: '待下达',
   released: '已下达',

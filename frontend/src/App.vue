@@ -35,6 +35,10 @@
           <el-icon><CircleCheck /></el-icon>
           <span>质量管理</span>
         </el-menu-item>
+        <el-menu-item index="/agent-chat">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>AI 助手</span>
+        </el-menu-item>
       </el-menu>
       <div class="sidebar-footer">
         <div class="factory-badge">18号工厂 · 总装线A</div>

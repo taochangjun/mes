@@ -8,6 +8,7 @@ const routes = [
   { path: '/terminal', component: () => import('./views/Terminal.vue'), meta: { title: 'MES 终端机' } },
   { path: '/materials', component: () => import('./views/Materials.vue'), meta: { title: '物料管理' } },
   { path: '/quality', component: () => import('./views/Quality.vue'), meta: { title: '质量管理' } },
+  { path: '/agent-chat', component: () => import('./views/AgentChat.vue'), meta: { title: 'AI 助手' } },
 ]
 
 const router = createRouter({

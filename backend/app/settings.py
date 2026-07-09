@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     deepseek_model_flash: str = "deepseek-v4-flash"  # 新增，可设置默认值
     deepseek_model_pro: str = "deepseek-v4-pro"  # 新增
     deepseek_models: str = ""  # 新增，注意类型，看起来是列表
+    # 留空则 SOP 检索使用关键词匹配；配置后启用 embedding 向量检索
+    embedding_model: str = ""
 
     # 指定要加载的 .env 文件
     _BACKEND_DIR = Path(__file__).resolve().parent.parent

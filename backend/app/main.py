@@ -53,6 +53,10 @@ def on_startup():
     Base.metadata.create_all(bind=engine)
     db = next(get_db())
     seed_demo_data(db)
+    from .agent.rag import get_sop_retriever
+
+    count = get_sop_retriever().build_index(db)
+    print(f"[RAG] SOP 索引已加载：{count} 个文本块")
 
 
 @app.get("/api/health")
